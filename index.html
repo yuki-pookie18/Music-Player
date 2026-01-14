@@ -1,0 +1,710 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>🎵 Pixel Player</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap');
+
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Press Start 2P', cursive;
+      background: linear-gradient(135deg, #2d1b3d 0%, #1a0f28 100%);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+      padding: 10px;
+      image-rendering: pixelated;
+      image-rendering: -moz-crisp-edges;
+      image-rendering: crisp-edges;
+      overflow: hidden;
+      -webkit-app-region: drag;
+    }
+
+    .player-container {
+      -webkit-app-region: no-drag;
+    }
+
+    .window-controls {
+      position: absolute;
+      top: 10px;
+      right: 10px;
+      z-index: 1000;
+    }
+
+    .window-btn {
+      width: 30px;
+      height: 30px;
+      border: 2px solid #8b6bac;
+      background: #2d1b3d;
+      color: #ff6b9d;
+      font-size: 16px;
+      cursor: pointer;
+      border-radius: 5px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.2s;
+      font-family: Arial, sans-serif;
+      padding: 0;
+    }
+
+    .window-btn:hover {
+      background: #ff6b9d;
+      color: #1a0f28;
+      border-color: #ffd9f2;
+    }
+
+    .player-container {
+      -webkit-app-region: no-drag;
+    }
+
+    .player-container {
+      background: #3d2957;
+      border: 6px solid #1a0f28;
+      border-radius: 20px;
+      box-shadow: 
+        0 0 0 4px #8b6bac,
+        0 8px 30px rgba(0, 0, 0, 0.5),
+        inset 0 2px 0 rgba(255, 255, 255, 0.1);
+      padding: 25px;
+      width: 400px;
+      position: relative;
+    }
+
+    .player-header {
+      text-align: center;
+      margin-bottom: 20px;
+      color: #ffd9f2;
+      font-size: 12px;
+      text-shadow: 2px 2px 0 #8b2c6b;
+      letter-spacing: 2px;
+    }
+
+    .screen {
+      background: #1a0f28;
+      border: 4px solid #8b6bac;
+      border-radius: 10px;
+      padding: 15px;
+      margin-bottom: 20px;
+      box-shadow: inset 0 0 20px rgba(0, 0, 0, 0.7);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .screen::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: repeating-linear-gradient(
+        0deg,
+        rgba(255, 255, 255, 0.03) 0px,
+        rgba(255, 255, 255, 0.03) 1px,
+        transparent 1px,
+        transparent 3px
+      );
+      pointer-events: none;
+    }
+
+    .album-art-container {
+      display: flex;
+      justify-content: center;
+      margin-bottom: 15px;
+      position: relative;
+    }
+
+    .album-art {
+      width: 180px;
+      height: 180px;
+      background: linear-gradient(135deg, #ff6b9d 0%, #c44569 50%, #8b2c6b 100%);
+      border: 4px solid #ffd9f2;
+      box-shadow: 
+        0 4px 0 #8b2c6b,
+        0 8px 20px rgba(0, 0, 0, 0.5);
+      position: relative;
+      overflow: hidden;
+      animation: float 3s ease-in-out infinite;
+    }
+
+    .album-art.playing {
+      animation: float 3s ease-in-out infinite, spin 10s linear infinite;
+    }
+
+    @keyframes float {
+      0%, 100% { transform: translateY(0px); }
+      50% { transform: translateY(-8px); }
+    }
+
+    @keyframes spin {
+      from { transform: rotate(0deg); }
+      to { transform: rotate(360deg); }
+    }
+
+    .album-art::after {
+      content: '♪';
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      font-size: 80px;
+      color: #ffd9f2;
+      text-shadow: 4px 4px 0 #8b2c6b;
+      animation: pulse 2s ease-in-out infinite;
+    }
+
+    @keyframes pulse {
+      0%, 100% { transform: translate(-50%, -50%) scale(1); }
+      50% { transform: translate(-50%, -50%) scale(1.1); }
+    }
+
+    .track-info {
+      text-align: center;
+      margin-top: 15px;
+    }
+
+    .track-title {
+      color: #ffd9f2;
+      font-size: 10px;
+      margin-bottom: 8px;
+      text-shadow: 2px 2px 0 #8b2c6b;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .track-artist {
+      color: #b08ac7;
+      font-size: 7px;
+      margin-bottom: 12px;
+    }
+
+    .progress-container {
+      margin: 15px 0;
+    }
+
+    .progress-bar {
+      width: 100%;
+      height: 16px;
+      background: #1a0f28;
+      border: 3px solid #8b6bac;
+      border-radius: 8px;
+      overflow: hidden;
+      position: relative;
+      cursor: pointer;
+      box-shadow: inset 0 2px 5px rgba(0, 0, 0, 0.5);
+    }
+
+    .progress-fill {
+      height: 100%;
+      background: linear-gradient(90deg, #ff6b9d 0%, #ffd9f2 100%);
+      width: 0%;
+      transition: width 0.1s linear;
+      box-shadow: 0 0 10px rgba(255, 107, 157, 0.5);
+    }
+
+    .time-display {
+      display: flex;
+      justify-content: space-between;
+      margin-top: 8px;
+      font-size: 7px;
+      color: #b08ac7;
+    }
+
+    .controls {
+      display: flex;
+      justify-content: center;
+      gap: 15px;
+      margin-top: 20px;
+    }
+
+    .btn {
+      width: 50px;
+      height: 50px;
+      border: 4px solid #8b6bac;
+      background: #2d1b3d;
+      color: #ffd9f2;
+      font-size: 18px;
+      cursor: pointer;
+      transition: all 0.1s;
+      box-shadow: 
+        0 4px 0 #1a0f28,
+        0 6px 10px rgba(0, 0, 0, 0.3);
+      position: relative;
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .btn:hover {
+      background: #3d2957;
+      transform: translateY(-2px);
+      box-shadow: 
+        0 6px 0 #1a0f28,
+        0 8px 15px rgba(0, 0, 0, 0.4);
+    }
+
+    .btn:active {
+      transform: translateY(2px);
+      box-shadow: 
+        0 2px 0 #1a0f28,
+        0 3px 5px rgba(0, 0, 0, 0.3);
+    }
+
+    .btn-play {
+      width: 65px;
+      height: 65px;
+      background: linear-gradient(135deg, #ff6b9d 0%, #c44569 100%);
+      border-color: #ffd9f2;
+      font-size: 24px;
+    }
+
+    .btn-play:hover {
+      background: linear-gradient(135deg, #ff8ab3 0%, #d55579 100%);
+    }
+
+    .volume-container {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-top: 20px;
+      padding: 12px;
+      background: #2d1b3d;
+      border: 3px solid #8b6bac;
+      border-radius: 10px;
+    }
+
+    .volume-icon {
+      font-size: 16px;
+      color: #ffd9f2;
+      min-width: 20px;
+    }
+
+    .volume-bar {
+      flex: 1;
+      height: 12px;
+      background: #1a0f28;
+      border: 2px solid #8b6bac;
+      border-radius: 6px;
+      overflow: hidden;
+      cursor: pointer;
+      position: relative;
+    }
+
+    .volume-fill {
+      height: 100%;
+      background: linear-gradient(90deg, #ff6b9d 0%, #ffd9f2 100%);
+      width: 70%;
+      transition: width 0.1s;
+    }
+
+    .add-songs-container {
+      margin-top: 15px;
+      text-align: center;
+    }
+
+    .btn-add-songs {
+      background: linear-gradient(135deg, #8b6bac 0%, #b08ac7 100%);
+      border: 3px solid #ffd9f2;
+      border-radius: 10px;
+      padding: 10px 15px;
+      color: #ffd9f2;
+      font-size: 8px;
+      cursor: pointer;
+      font-family: 'Press Start 2P', cursive;
+      transition: all 0.2s;
+      box-shadow: 0 4px 0 #3d2957, 0 6px 10px rgba(0, 0, 0, 0.3);
+    }
+
+    .btn-add-songs:hover {
+      background: linear-gradient(135deg, #9c7cbd 0%, #c09ad7 100%);
+      transform: translateY(-2px);
+      box-shadow: 0 6px 0 #3d2957, 0 8px 15px rgba(0, 0, 0, 0.4);
+    }
+
+    .btn-add-songs:active {
+      transform: translateY(2px);
+      box-shadow: 0 2px 0 #3d2957, 0 3px 5px rgba(0, 0, 0, 0.3);
+    }
+
+    #fileInput {
+      display: none;
+    }
+
+    .playlist {
+      margin-top: 15px;
+      max-height: 150px;
+      overflow-y: auto;
+      background: #2d1b3d;
+      border: 3px solid #8b6bac;
+      border-radius: 10px;
+      padding: 8px;
+    }
+
+    .playlist-item {
+      padding: 8px;
+      margin: 4px 0;
+      background: #1a0f28;
+      border: 2px solid transparent;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 7px;
+      color: #b08ac7;
+      transition: all 0.2s;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .playlist-item:hover {
+      background: #3d2957;
+      border-color: #8b6bac;
+      color: #ffd9f2;
+    }
+
+    .playlist-item.active {
+      background: linear-gradient(90deg, #8b2c6b 0%, #c44569 100%);
+      border-color: #ffd9f2;
+      color: #ffd9f2;
+    }
+
+    .playlist-item-remove {
+      color: #ff6b9d;
+      cursor: pointer;
+      padding: 2px 6px;
+      border-radius: 3px;
+      transition: all 0.2s;
+    }
+
+    .playlist-item-remove:hover {
+      background: #ffd9f2;
+      color: #8b2c6b;
+    }
+
+    .playlist-empty {
+      text-align: center;
+      padding: 20px;
+      color: #8b6bac;
+      font-size: 7px;
+    }
+
+    ::-webkit-scrollbar {
+      width: 8px;
+    }
+
+    ::-webkit-scrollbar-track {
+      background: #1a0f28;
+      border-radius: 4px;
+    }
+
+    ::-webkit-scrollbar-thumb {
+      background: #8b6bac;
+      border-radius: 4px;
+    }
+
+    ::-webkit-scrollbar-thumb:hover {
+      background: #b08ac7;
+    }
+  </style>
+</head>
+<body>
+  <div class="player-container">
+    <div class="window-controls">
+      <button class="window-btn" id="closeBtn">✕</button>
+    </div>
+    
+    <div class="player-header">
+      ★ PIXEL PLAYER ★
+    </div>
+
+    <div class="screen">
+      <div class="album-art-container">
+        <div class="album-art" id="albumArt"></div>
+      </div>
+
+      <div class="track-info">
+        <div class="track-title" id="trackTitle">NO SONG LOADED</div>
+        <div class="track-artist" id="trackArtist">ADD SONGS TO START</div>
+      </div>
+
+      <div class="progress-container">
+        <div class="progress-bar" id="progressBar">
+          <div class="progress-fill" id="progressFill"></div>
+        </div>
+        <div class="time-display">
+          <span id="currentTime">0:00</span>
+          <span id="duration">0:00</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="controls">
+      <button class="btn" id="prevBtn">⏮</button>
+      <button class="btn btn-play" id="playBtn">▶</button>
+      <button class="btn" id="nextBtn">⏭</button>
+    </div>
+
+    <div class="volume-container">
+      <div class="volume-icon" id="volumeIcon">🔊</div>
+      <div class="volume-bar" id="volumeBar">
+        <div class="volume-fill" id="volumeFill"></div>
+      </div>
+    </div>
+
+    <div class="add-songs-container">
+      <button class="btn-add-songs" id="addSongsBtn">+ ADD SONGS</button>
+      <input type="file" id="fileInput" accept="audio/*" multiple>
+    </div>
+
+    <div class="playlist" id="playlist">
+      <div class="playlist-empty">
+        NO SONGS IN PLAYLIST<br><br>
+        CLICK "ADD SONGS" TO START
+      </div>
+    </div>
+  </div>
+
+  <audio id="audioPlayer"></audio>
+
+  <script>
+    // Music player state
+    let isPlaying = false;
+    let currentTrack = 0;
+    let tracks = [];
+
+    // Elements
+    const audioPlayer = document.getElementById('audioPlayer');
+    const playBtn = document.getElementById('playBtn');
+    const prevBtn = document.getElementById('prevBtn');
+    const nextBtn = document.getElementById('nextBtn');
+    const progressBar = document.getElementById('progressBar');
+    const progressFill = document.getElementById('progressFill');
+    const currentTimeEl = document.getElementById('currentTime');
+    const durationEl = document.getElementById('duration');
+    const volumeBar = document.getElementById('volumeBar');
+    const volumeFill = document.getElementById('volumeFill');
+    const volumeIcon = document.getElementById('volumeIcon');
+    const playlistEl = document.getElementById('playlist');
+    const trackTitle = document.getElementById('trackTitle');
+    const trackArtist = document.getElementById('trackArtist');
+    const addSongsBtn = document.getElementById('addSongsBtn');
+    const fileInput = document.getElementById('fileInput');
+    const albumArt = document.getElementById('albumArt');
+
+    // Set initial volume
+    audioPlayer.volume = 0.7;
+
+    // Format time
+    function formatTime(seconds) {
+      if (isNaN(seconds)) return '0:00';
+      const mins = Math.floor(seconds / 60);
+      const secs = Math.floor(seconds % 60);
+      return `${mins}:${secs.toString().padStart(2, '0')}`;
+    }
+
+    // Add songs
+    addSongsBtn.addEventListener('click', () => {
+      fileInput.click();
+    });
+
+    fileInput.addEventListener('change', (e) => {
+      const files = Array.from(e.target.files);
+      files.forEach(file => {
+        const url = URL.createObjectURL(file);
+        const fileName = file.name.replace(/\.(mp3|wav|ogg|m4a)$/i, '');
+        tracks.push({
+          title: fileName,
+          url: url,
+          file: file
+        });
+      });
+      
+      if (tracks.length > 0 && currentTrack === 0 && !audioPlayer.src) {
+        loadTrack(0);
+      }
+      
+      updatePlaylist();
+      fileInput.value = '';
+    });
+
+    // Load track
+    function loadTrack(index) {
+      if (tracks.length === 0) return;
+      
+      currentTrack = index;
+      const track = tracks[currentTrack];
+      audioPlayer.src = track.url;
+      trackTitle.textContent = track.title;
+      trackArtist.textContent = 'LOCAL FILE';
+      
+      audioPlayer.addEventListener('loadedmetadata', () => {
+        durationEl.textContent = formatTime(audioPlayer.duration);
+      });
+      
+      updatePlaylist();
+    }
+
+    // Update display
+    function updatePlaylist() {
+      if (tracks.length === 0) {
+        playlistEl.innerHTML = `
+          <div class="playlist-empty">
+            NO SONGS IN PLAYLIST<br><br>
+            CLICK "ADD SONGS" TO START
+          </div>
+        `;
+        return;
+      }
+
+      playlistEl.innerHTML = tracks.map((track, i) => `
+        <div class="playlist-item ${i === currentTrack ? 'active' : ''}" data-index="${i}">
+          <span>♪ ${track.title}</span>
+          <span class="playlist-item-remove" data-index="${i}">✕</span>
+        </div>
+      `).join('');
+
+      // Add click handlers
+      document.querySelectorAll('.playlist-item').forEach(item => {
+        item.addEventListener('click', (e) => {
+          if (!e.target.classList.contains('playlist-item-remove')) {
+            const index = parseInt(item.dataset.index);
+            loadTrack(index);
+            if (isPlaying) {
+              audioPlayer.play();
+            }
+          }
+        });
+      });
+
+      // Add remove handlers
+      document.querySelectorAll('.playlist-item-remove').forEach(btn => {
+        btn.addEventListener('click', (e) => {
+          e.stopPropagation();
+          const index = parseInt(btn.dataset.index);
+          removeTrack(index);
+        });
+      });
+    }
+
+    // Remove track
+    function removeTrack(index) {
+      URL.revokeObjectURL(tracks[index].url);
+      tracks.splice(index, 1);
+      
+      if (tracks.length === 0) {
+        audioPlayer.pause();
+        audioPlayer.src = '';
+        isPlaying = false;
+        playBtn.textContent = '▶';
+        trackTitle.textContent = 'NO SONG LOADED';
+        trackArtist.textContent = 'ADD SONGS TO START';
+        albumArt.classList.remove('playing');
+      } else if (index === currentTrack) {
+        if (currentTrack >= tracks.length) {
+          currentTrack = 0;
+        }
+        loadTrack(currentTrack);
+        if (isPlaying) {
+          audioPlayer.play();
+        }
+      } else if (index < currentTrack) {
+        currentTrack--;
+      }
+      
+      updatePlaylist();
+    }
+
+    // Play/Pause
+    playBtn.addEventListener('click', () => {
+      if (tracks.length === 0) return;
+      
+      if (isPlaying) {
+        audioPlayer.pause();
+        albumArt.classList.remove('playing');
+      } else {
+        audioPlayer.play();
+        albumArt.classList.add('playing');
+      }
+      
+      isPlaying = !isPlaying;
+      playBtn.textContent = isPlaying ? '⏸' : '▶';
+    });
+
+    // Update progress
+    audioPlayer.addEventListener('timeupdate', () => {
+      const percent = (audioPlayer.currentTime / audioPlayer.duration) * 100;
+      progressFill.style.width = percent + '%';
+      currentTimeEl.textContent = formatTime(audioPlayer.currentTime);
+    });
+
+    // Track ended
+    audioPlayer.addEventListener('ended', () => {
+      nextTrack();
+    });
+
+    // Seek
+    progressBar.addEventListener('click', (e) => {
+      if (tracks.length === 0) return;
+      const rect = progressBar.getBoundingClientRect();
+      const percent = (e.clientX - rect.left) / rect.width;
+      audioPlayer.currentTime = percent * audioPlayer.duration;
+    });
+
+    // Previous track
+    prevBtn.addEventListener('click', () => {
+      if (tracks.length === 0) return;
+      currentTrack = (currentTrack - 1 + tracks.length) % tracks.length;
+      loadTrack(currentTrack);
+      if (isPlaying) {
+        audioPlayer.play();
+      }
+    });
+
+    // Next track
+    function nextTrack() {
+      if (tracks.length === 0) return;
+      currentTrack = (currentTrack + 1) % tracks.length;
+      loadTrack(currentTrack);
+      if (isPlaying) {
+        audioPlayer.play();
+      }
+    }
+
+    nextBtn.addEventListener('click', nextTrack);
+
+    // Volume control
+    volumeBar.addEventListener('click', (e) => {
+      const rect = volumeBar.getBoundingClientRect();
+      const volume = (e.clientX - rect.left) / rect.width;
+      audioPlayer.volume = volume;
+      volumeFill.style.width = (volume * 100) + '%';
+      
+      if (volume === 0) {
+        volumeIcon.textContent = '🔇';
+      } else if (volume < 0.5) {
+        volumeIcon.textContent = '🔉';
+      } else {
+        volumeIcon.textContent = '🔊';
+      }
+    });
+
+    // Window controls
+    const closeBtn = document.getElementById('closeBtn');
+    if (closeBtn) {
+      closeBtn.addEventListener('click', () => {
+        window.close();
+      });
+    }
+  </script>
+</body>
+</html>

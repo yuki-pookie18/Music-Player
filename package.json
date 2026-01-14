@@ -1,0 +1,16 @@
+{
+  "name": "electron-app",
+  
+  "version": "1.0.0",
+  "description": "A cute pixel art style music player",
+  "main": "main.js",
+  "scripts": {
+    "start": "electron ."
+  },
+  "keywords": ["music", "player", "pixel", "electron"],
+  "author": "Your Name",
+  "license": "MIT",
+  "devDependencies": {
+    "electron": "^28.0.0"
+  }
+}
